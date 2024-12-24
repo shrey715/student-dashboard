@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-export async function fetchStudents() {
+async function fetchStudents() {
     const prisma = new PrismaClient();
     try {
         const students = await prisma.student.findMany({
