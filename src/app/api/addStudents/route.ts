@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export async function POST(request: NextRequest){
+export async function POST(request: NextRequest) {
   const prisma = new PrismaClient();
-  try{
-    const {name, cohort, status, courseIds} = await request.json();
+  try {
+    const addstudent = await request.json();
+    console.log(addstudent);
+    const { name, cohort, status, courses } = addstudent;
+    console.log(name, cohort, status, courses);
+
     const student = await prisma.student.create({
       data: {
         name,
         cohort,
         status,
         StudentCourseReport: {
-          create: courseIds.map((id: number) => ({
+          create: courses.map((id: number) => ({
             Course: {
               connect: {
                 id,
@@ -21,12 +25,24 @@ export async function POST(request: NextRequest){
         },
       },
     });
-    return NextResponse.json(student, {status: 201});
-  }catch(error){
-    if (error instanceof Prisma.PrismaClientKnownRequestError){
-      return NextResponse.json({error: error.message}, {status: 400});
+
+    return NextResponse.json(student, { status: 201 });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientRustPanicError ||
+      error instanceof Prisma.PrismaClientKnownRequestError
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    } else if (error instanceof Prisma.PrismaClientValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    } else if (
+      error instanceof Prisma.PrismaClientInitializationError ||
+      error instanceof Prisma.PrismaClientInitializationError
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
-  }finally{
+    return NextResponse.json({ error: "Unable to add student" }, { status: 500 });
+  } finally {
     await prisma.$disconnect();
   }
-} 
+}

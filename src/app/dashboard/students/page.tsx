@@ -15,13 +15,16 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import StudentModal from "@/components/ui/studentmodal";
 import { Plus } from "lucide-react";
 import { FaCircle } from 'react-icons/fa';
 import { Student, StudentStatus } from '@prisma/client';
-import { useStudentStore } from "@/lib/zustand-store";
-import { useEffect } from "react";
+import { useStudentStore, useModalStore } from "@/lib/zustand-store";
+import { useEffect, useState } from "react";
+import { StudentCourseReport, Course } from "@prisma/client";
 
 const TableControl = () => {
+  const { open } = useModalStore();
   return (
     <div
       className="flex items-center justify-between w-full mb-4"
@@ -50,18 +53,45 @@ const TableControl = () => {
       </div>
       <Button variant="secondary" className="bg-gray-200 dark:bg-neutral-800 font-semibold text-md">
         <Plus size={24} />
-        <span className="ml-2">Add New Student</span>
+        <span className="ml-2" onClick={open}>Add New Student</span>
       </Button>
     </div>
   );
 }
 
 const StudentRow = ({ student }: { student: Student; }) => {
+  const [courses, setCourses] = useState<string[]>([]);
+
+  const fetchStudentCourses = async (studentId: number) => {
+    const [courses, studentCourseReports] = await Promise.all([
+      fetch('/api/fetchCourses').then((res) => res.json()),
+      fetch('/api/fetchStudentCourse').then((res) => res.json())
+    ]);
+    
+    const studentCourses = studentCourseReports.filter((report: StudentCourseReport) => report.student_id === studentId);
+    const courseNames = studentCourses.map((report: StudentCourseReport) => {
+      const course = courses.find((course: Course) => course.id === report.course_id);
+      return course.name;
+    });
+
+    setCourses(courseNames);
+  }
+
+  useEffect(() => {
+    fetchStudentCourses(student.id);
+  }, [student.id]);
+
   return (
     <TableRow>
       <TableCell>{student.name}</TableCell>
       <TableCell>{student.cohort}</TableCell>
-      <TableCell>Empty</TableCell>
+      <TableCell className="flex flex-row gap-1">
+        {
+          courses.map((course, index) => (
+            <span key={index} className="text-sm p-1 bg-stone-200 rounded-md">{course}</span>
+          ))
+        }
+      </TableCell>
       <TableCell>{new Date(student.date_joined).toDateString()}</TableCell>
       <TableCell>{new Date(student.last_login).toLocaleString()}</TableCell>
       <TableCell><FaCircle size={10} className={student.status === StudentStatus.ACTIVE ? 'text-green-500' : 'text-red-500'} /></TableCell>
@@ -99,12 +129,16 @@ const StudentsTable = () => {
 }
 
 const Students = () => {
+  const { isOpen } = useModalStore();
   return (
     <section
       className="bg-white dark:bg-black rounded-lg w-full h-full p-3"
     >
       <TableControl />
       <StudentsTable />
+      {
+        isOpen && <StudentModal />
+      }
     </section>
   )
 }
