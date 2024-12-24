@@ -68,3 +68,34 @@ export const useModalStore = create<ModalStore>((set) => ({
     open: () => set({ isOpen: true }),
     close: () => set({ isOpen: false })
 }));
+
+interface SidebarStore {
+    isOpen: boolean;
+    open: () => void;
+    close: () => void;
+}
+
+export const useSidebarStore = create<SidebarStore>((set) => ({
+    isOpen: false,
+    open: () => set({ isOpen: true }),
+    close: () => set({ isOpen: false })
+}));
+
+interface ClassStore {
+    classes: string[];
+    setClasses: (classes: string[]) => void;
+    fetchClasses: () => void;
+}
+
+export const useClassStore = create<ClassStore>((set) => ({
+    classes: [],
+    setClasses: (classes) => set({ classes }),
+    fetchClasses: async () => {
+        const courses = await fetch('/api/fetchCourses').then((res) => res.json());
+        const classes: string[] = courses.map((course: Course) => {
+            const className = course.name.split(' ').slice(0, 2).join(' ');
+            return className;
+        });
+        set({ classes: [...new Set(classes)] });
+    }
+}));

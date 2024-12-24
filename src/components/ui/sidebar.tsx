@@ -1,14 +1,16 @@
 "use client";
 import { RiDashboard3Line, RiBookReadFill, RiBookMarkedLine } from 'react-icons/ri';
 import { JSX } from 'react';
-import { ChartPie, Bolt, CircleHelp } from 'lucide-react';
+import { ChartPie, Bolt, CircleHelp, SidebarClose } from 'lucide-react';
 import Logo from '@/components/ui/logo';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import { useSidebarStore } from '@/lib/zustand-store';
+import { useState, useEffect } from 'react';
 
-const dashbaordSidebarItems = [
+const dashboardSidebarItems = [
     {
         title: 'Dashboard',
         icon: <RiDashboard3Line size={24}/>,
@@ -61,28 +63,47 @@ const SidebarItem = ({ title, icon, link, active }: SidebarItemProps) => {
 
 const Sidebar = () => {
     const pathname = usePathname();
+    const { isOpen, close } = useSidebarStore();
+    const [isWindowWide, setIsWindowWide] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+          setIsWindowWide(window.innerWidth >= 768);
+        };
+    
+        handleResize(); 
+        window.addEventListener("resize", handleResize);
+    
+        return () => {
+          window.removeEventListener("resize", handleResize);
+        };
+      }, []);
+
     return (
-        <motion.nav
-            className="w-64 h-screen bg-white dark:bg-black px-3 fixed md:relative z-10 text-md"
-            initial={{ x: -500 }}
-            animate={{ x: 0 }}
-            transition={{ type: 'spring', stiffness: 50 }}
-        >
-            <div className="flex items-center justify-center py-4">
-                <Logo className='w-40' />
-            </div>
-            <div className="flex flex-col">
-                {dashbaordSidebarItems.map((item, index) => (
-                    <SidebarItem
-                        key={index}
-                        title={item.title}
-                        icon={item.icon}
-                        link={item.link}
-                        active={pathname === item.link}
-                    />
-                ))}
-            </div>
-        </motion.nav>
+        (isOpen || isWindowWide) && (
+            <motion.nav
+                className="w-64 h-screen bg-white dark:bg-black px-3 fixed md:relative z-10 text-md"
+                initial={{ x: -500 }}
+                animate={{ x: 0 }}
+                transition={{ type: 'spring', stiffness: 50 }}
+            >
+                <div className="flex items-center justify-center py-4 gap-3">
+                    <SidebarClose className="w-6 h-6 cursor-pointer md:hidden" onClick={() => close()} />
+                    <Logo className='w-28 md:w-40' />
+                </div>
+                <div className="flex flex-col">
+                    {dashboardSidebarItems.map((item, index) => (
+                        <SidebarItem
+                            key={index}
+                            title={item.title}
+                            icon={item.icon}
+                            link={item.link}
+                            active={pathname === item.link}
+                        />
+                    ))}
+                </div>
+            </motion.nav>
+        )
     );
 };
 
