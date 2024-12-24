@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Course, Student, StudentCourseReport } from '@prisma/client';
 
+// interface for the student store
 interface StudentStore {
     students: Student[];
     setStudents: (students: Student[]) => void;
@@ -8,6 +9,7 @@ interface StudentStore {
     filterStudents: (coursename: string) => void;
 }
 
+// create the student store using zustand
 export const useStudentStore = create<StudentStore>((set) => ({
     students: [],
     setStudents: (students) => set({ students }),
@@ -26,15 +28,16 @@ export const useStudentStore = create<StudentStore>((set) => ({
             set({ students: [] });
             return;
         }
-        const filtered_students = students.filter((student: Student) => 
+        const filteredStudents = students.filter((student: Student) => 
             studentCourseReports.some((report: StudentCourseReport) => 
                 report.student_id === student.id && report.course_id === course.id
             )
         );
-        set({ students: filtered_students });
+        set({ students: filteredStudents });
     }
 }));
 
+// interface for the course store
 interface CourseStore {
     courses: Course[];
     setCourses: (courses: Course[]) => void;
@@ -42,6 +45,7 @@ interface CourseStore {
     filterCourses: (search: string) => void;
 }
 
+// create the course store using zustand
 export const useCourseStore = create<CourseStore>((set) => ({
     courses: [],
     setCourses: (courses) => set({ courses }),
@@ -52,41 +56,47 @@ export const useCourseStore = create<CourseStore>((set) => ({
     filterCourses: async (search) => {
         const res = await fetch('/api/fetchCourses');
         const courses = await res.json();
-        const filtered_courses = courses.filter((course: Course) => course.name.toLowerCase().includes(search.toLowerCase()));
-        set({ courses: filtered_courses });
+        const filteredCourses = courses.filter((course: Course) => course.name.toLowerCase().includes(search.toLowerCase()));
+        set({ courses: filteredCourses });
     }
 }));
 
+// interface for the modal store
 interface ModalStore {
     isOpen: boolean;
     open: () => void;
     close: () => void;
 }
 
+// create the modal store using zustand
 export const useModalStore = create<ModalStore>((set) => ({
     isOpen: false,
     open: () => set({ isOpen: true }),
     close: () => set({ isOpen: false })
 }));
 
+// interface for the sidebar store
 interface SidebarStore {
     isOpen: boolean;
     open: () => void;
     close: () => void;
 }
 
+// create the sidebar store using zustand
 export const useSidebarStore = create<SidebarStore>((set) => ({
     isOpen: false,
     open: () => set({ isOpen: true }),
     close: () => set({ isOpen: false })
 }));
 
+// interface for the class store
 interface ClassStore {
     classes: string[];
     setClasses: (classes: string[]) => void;
     fetchClasses: () => void;
 }
 
+// create the class store using zustand
 export const useClassStore = create<ClassStore>((set) => ({
     classes: [],
     setClasses: (classes) => set({ classes }),
@@ -96,6 +106,6 @@ export const useClassStore = create<ClassStore>((set) => ({
             const className = course.name.split(' ').slice(0, 2).join(' ');
             return className;
         });
-        set({ classes: [...new Set(classes)] });
+        set({ classes: [...new Set(classes)] }); // remove duplicates
     }
 }));
