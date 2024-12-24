@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Course {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  description         String?
+  StudentCourseReport StudentCourseReport[]
+}
+
+model Student {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  cohort              String
+  date_joined         DateTime              @default(now())
+  last_login          DateTime              @default(now())
+  status              StudentStatus         @default(ACTIVE)
+  StudentCourseReport StudentCourseReport[]
+}
+
+model StudentCourseReport {
+  id          Int     @id @default(autoincrement())
+  student_id  Int
+  course_id   Int
+  grade       Int?
+  description String?
+  Student     Student @relation(fields: [student_id], references: [id])
+  Course      Course  @relation(fields: [course_id], references: [id])
+}
